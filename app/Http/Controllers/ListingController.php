@@ -4,44 +4,39 @@ namespace App\Http\Controllers;
 
 use App\Models\Listing;
 use Illuminate\Http\Request;
-
 use Illuminate\Validation\Rule;
-use function GuzzleHttp\Promise\all;
 
 class ListingController extends Controller
 {
-    //get and show all listings
+    // Show all listings
     public function index() {
-     return view('listings.edit', [
-                'listings' => Listing::latest()->filter(request(['tag', 'search'])),
-            ]);
-    
-
+        return view('listings.index', [
+            'listings' => Listing::latest()->filter(request(['tag', 'search']))->paginate(6)
+        ]);
     }
 
-//show single listing
+    //Show single listing
     public function show(Listing $listing) {
         return view('listings.show', [
             'listing' => $listing
-         ]);
+        ]);
     }
 
-    //Show create form
+    // Show Create Form
     public function create() {
         return view('listings.create');
     }
 
-    //store listing data
+    // Store Listing Data
     public function store(Request $request) {
         $formFields = $request->validate([
             'title' => 'required',
             'company' => ['required', Rule::unique('listings', 'company')],
-            'location' =>'required',
+            'location' => 'required',
             'website' => 'required',
-            'email' => ['required','email'],
+            'email' => ['required', 'email'],
             'tags' => 'required',
-            'description' => 'required',
-           
+            'description' => 'required'
         ]);
 
         if($request->hasFile('logo')) {
@@ -52,34 +47,29 @@ class ListingController extends Controller
 
         Listing::create($formFields);
 
-
-      
-
-        return redirect('/')->with('message', 'Listing created succesfully');
+        return redirect('/')->with('message', 'Listing created successfully!');
     }
 
-    //Show edit Form
+    // Show Edit Form
     public function edit(Listing $listing) {
         return view('listings.edit', ['listing' => $listing]);
     }
 
-    //update listing data
-
+    // Update Listing Data
     public function update(Request $request, Listing $listing) {
-
-        //Make sure logged in user is owner
+        // Make sure logged in user is owner
         if($listing->user_id != auth()->id()) {
-            abort(403, 'Unauthorized');
+            abort(403, 'Unauthorized Action');
         }
+        
         $formFields = $request->validate([
             'title' => 'required',
             'company' => ['required'],
-            'location' =>'required',
+            'location' => 'required',
             'website' => 'required',
-            'email' => ['required','email'],
+            'email' => ['required', 'email'],
             'tags' => 'required',
-            'description' => 'required',
-           
+            'description' => 'required'
         ]);
 
         if($request->hasFile('logo')) {
@@ -88,28 +78,22 @@ class ListingController extends Controller
 
         $listing->update($formFields);
 
-
-        return back()->with('message', 'Listing updated succesfully');
+        return back()->with('message', 'Listing updated successfully!');
     }
 
-
-    //Delete listing
+    // Delete Listing
     public function destroy(Listing $listing) {
-        //Make sure logged in user is owner
+        // Make sure logged in user is owner
         if($listing->user_id != auth()->id()) {
-            abort(403, 'Unauthorized');
+            abort(403, 'Unauthorized Action');
         }
+        
         $listing->delete();
-        return redirect('/')->with('message', 'Listing deleted succesfully');
+        return redirect('/')->with('message', 'Listing deleted successfully');
     }
 
-
-    //Manage Listings
-
+    // Manage Listings
     public function manage() {
-        return view('listings.manage', ['listings' => auth()->
-        user()->listings()->get()]);
+        return view('listings.manage', ['listings' => auth()->user()->listings()->get()]);
     }
-
-   
 }
